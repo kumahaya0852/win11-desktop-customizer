@@ -1,0 +1,361 @@
+/* ── Root ────────────────────────────── */
+.root {
+  position: relative;
+  width: 340px;
+  height: 100%;
+  display: flex;
+  pointer-events: none;
+}
+
+/* ── トグルボタン ────────────────────── */
+.toggle {
+  position: absolute;
+  left: 0;
+  /* top は DraggableToggle の inline style で制御 */
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 6px;
+  background: rgba(10,10,20,0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-left: none;
+  border-radius: 0 12px 12px 0;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 250ms ease;
+  box-shadow: -4px 0 20px rgba(0,0,0,0.3);
+}
+.toggle:hover {
+  color: rgba(255,255,255,0.9);
+  background: rgba(15,15,28,0.9);
+  border-color: rgba(255,255,255,0.16);
+}
+.toggleOpen {
+  color: var(--accent);
+  border-color: rgba(255,255,255,0.12);
+}
+.toggleDragging {
+  border-color: var(--accent) !important;
+  background: rgba(15,15,28,0.95) !important;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.5), 0 0 0 1px var(--accent) !important;
+}
+
+.toggleIcon  { font-size: 16px; }
+.toggleArrow { font-size: 12px; }
+
+/* ── ドロワー本体 ────────────────────── */
+.drawer {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(8,8,18,0.88);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border-right: 1px solid rgba(255,255,255,0.09);
+  box-shadow: 4px 0 40px rgba(0,0,0,0.5);
+  pointer-events: auto;
+
+  /* アニメーション */
+  transform: translateX(-100%);
+  opacity: 0;
+  transition: transform 350ms cubic-bezier(0.34,1.2,0.64,1),
+              opacity 280ms ease;
+  overflow: hidden;
+}
+.drawerOpen {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* ── ヘッダー ────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.headerLogo  { font-size: 18px; filter: drop-shadow(0 0 6px currentColor); }
+.headerTitle { flex: 1; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.9); }
+.headerClose {
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.05); border: none; border-radius: 50%;
+  color: rgba(255,255,255,0.4); cursor: pointer; font-size: 10px;
+  transition: all 150ms ease;
+}
+.headerClose:hover { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.8); }
+
+/* ── コンテンツ ──────────────────────── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Section ─────────────────────────── */
+.section { display: flex; flex-direction: column; gap: 10px; }
+
+.sectionTitle {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+}
+
+/* ── モードグリッド ──────────────────── */
+.modeGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.modeBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  color: rgba(255,255,255,0.55);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+.modeBtn:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.9);
+}
+.modeBtnActive {
+  background: rgba(255,255,255,0.08) !important;
+  border-color: var(--m, var(--accent)) !important;
+  color: var(--m, var(--accent)) !important;
+}
+.modeBtnIcon  { font-size: 16px; }
+.modeBtnLabel { font-size: 11px; font-weight: 500; }
+
+/* ── テーマ ──────────────────────────── */
+.themeRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.themeBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 99px;
+  color: rgba(255,255,255,0.55);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+.themeBtn:hover {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.9);
+}
+.themeBtnActive {
+  border-color: var(--c) !important;
+  background: rgba(255,255,255,0.08) !important;
+  color: rgba(255,255,255,0.9) !important;
+}
+.themeDot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.themeLabel { font-size: 11px; }
+
+/* ── ウィジェットリスト ──────────────── */
+.widgetList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.widgetEmpty {
+  font-size: 12px;
+  color: rgba(255,255,255,0.25);
+  text-align: center;
+  padding: 12px;
+}
+.widgetRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+}
+.widgetName { font-size: 13px; color: rgba(255,255,255,0.7); }
+
+/* ── トグルスイッチ ──────────────────── */
+.toggle2 {
+  width: 36px; height: 20px;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.12);
+  position: relative;
+  cursor: pointer;
+  transition: background 250ms ease;
+  flex-shrink: 0;
+}
+.toggle2On { /* background は inline で accent を適用 */ }
+.toggle2Knob {
+  position: absolute;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  top: 3px; left: 3px;
+  transition: transform 250ms cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 250ms ease;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.toggle2On .toggle2Knob {
+  transform: translateX(16px);
+}
+
+/* ── 詳細設定ボタン ──────────────────── */
+.detailBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  margin-top: auto;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  color: rgba(255,255,255,0.7);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+  width: 100%;
+}
+.detailBtn:hover {
+  background: rgba(255,255,255,0.09);
+  border-color: var(--accent);
+  color: #fff;
+}
+.detailBtnArrow {
+  margin-left: auto;
+  font-size: 16px;
+  color: rgba(255,255,255,0.35);
+  transition: transform 200ms ease;
+}
+.detailBtn:hover .detailBtnArrow {
+  transform: translateX(4px);
+  color: var(--accent);
+}
+
+/* ── 編集モードフローティングバー ─── */
+.editBar {
+  /* ウィンドウ全体が完了バー（setEditLayout で320x48に縮小済み）*/
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  background: rgba(8, 8, 18, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 12px;
+  pointer-events: auto;
+  white-space: nowrap;
+  animation: editBarIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes editBarIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-12px) scale(0.9); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+.editBarDot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: blink 1.2s ease-in-out infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+.editBarText {
+  font-size: 12px;
+  color: rgba(255,255,255,0.8);
+  font-weight: 500;
+}
+
+.editBarDone {
+  padding: 5px 14px;
+  border: none;
+  border-radius: 99px;
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 150ms ease;
+}
+.editBarDone:hover { opacity: 0.85; }
+
+/* ── セクションタイトル行 ─────────── */
+.sectionTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ── 編集ボタン ──────────────────── */
+.editBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 99px;
+  color: rgba(255,255,255,0.6);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+.editBtn:hover {
+  background: var(--accent-dim, rgba(91,140,255,0.15));
+  border-color: var(--accent, #5b8cff);
+  color: var(--accent, #5b8cff);
+}
+
+/* ── ウィジェット行アイコン ────────── */
+.widgetIcon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* ── フッターボタン群 ────────────── */
+.footerBtns {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

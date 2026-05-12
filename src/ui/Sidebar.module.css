@@ -1,0 +1,169 @@
+.nav {
+  width: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+  gap: 2px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 68px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+  position: relative;
+}
+
+.item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 16px;
+  bottom: 16px;
+  width: 2px;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+  opacity: 0;
+  transition: opacity var(--t-mid);
+}
+
+.item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.active {
+  color: var(--accent) !important;
+  background: var(--accent-dim);
+}
+
+.active::before {
+  opacity: 1;
+}
+
+.icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+.bottom {
+  padding: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.version {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-muted);
+}
+
+.bottomItems {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0 12px;
+  gap: 2px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Mode button ─────────────────────── */
+.modeWrap {
+  position: relative;
+  width: 100%;
+  padding: 0 8px;
+  margin-bottom: 4px;
+}
+
+.modeBtn {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+.modeBtn:hover, .modeBtnOpen {
+  border-color: var(--border-md);
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.modeBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.modeBtnIcon  { font-size: 16px; line-height: 1; }
+.modeBtnLabel { font-size: 9px; font-weight: 500; letter-spacing: .03em; }
+
+/* ── Mode menu（左側に展開） ─────────── */
+.modeMenu {
+  position: absolute;
+  bottom: 0;
+  left: calc(100% + 8px);
+  width: 220px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-md);
+  border-radius: var(--r-lg);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.modeMenuTitle {
+  padding: 9px 14px 7px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.modeMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: background var(--t-fast);
+}
+.modeMenuItem:hover     { background: var(--bg-hover); }
+.modeMenuItemActive     { background: var(--accent-dim) !important; }
+
+.modeMenuIcon  { font-size: 16px; flex-shrink: 0; }
+.modeMenuInfo  { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.modeMenuLabel { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.modeMenuDesc  { font-size: 10px; color: var(--text-muted); line-height: 1.4; }

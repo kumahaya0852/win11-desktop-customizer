@@ -1,0 +1,75 @@
+/* オーバーレイ専用スタイル */
+/* 背景は完全透明、ウィジェットだけ表示 */
+
+:root {
+  /* デスクトップ上では少し明るめのデフォルト */
+  --widget-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  --widget-border:  rgba(255, 255, 255, 0.10);
+}
+
+body {
+  background: transparent !important;
+  pointer-events: none;  /* デフォルトはクリックスルー（JS で切り替え）*/
+}
+
+/* 編集モード時はボーダーを強調 */
+.edit-mode body {
+  pointer-events: auto;
+}
+
+/* オーバーレイウィジェットはより大きなシャドウ */
+.overlay-widget {
+  box-shadow: var(--widget-shadow) !important;
+  border-color: var(--widget-border) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* 編集モードのグリッドガイド */
+.edit-mode .overlay-canvas::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 編集モードバナー */
+.edit-banner {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(91, 140, 255, 0.92);
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  z-index: 9999;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+  font-family: sans-serif;
+}
+
+.edit-banner-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.8); }
+}

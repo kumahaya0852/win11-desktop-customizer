@@ -1,0 +1,73 @@
+{
+  "name": "win11-desktop-customizer",
+  "version": "0.1.0",
+  "description": "Linux-style desktop customizer for Windows 11",
+  "main": "electron/main.js",
+  "author": "win11-customizer",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:react\" \"npm run dev:electron\"",
+    "dev:react": "vite",
+    "dev:electron": "wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .",
+    "build:win": "vite build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0",
+    "winreg": "^1.2.4",
+    "wallpaper": "^7.3.0",
+    "eventemitter3": "^5.0.1",
+    "chokidar": "^3.5.3",
+    "semver": "^7.5.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "vite": "^5.0.10",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.win11customizer.app",
+    "productName": "Win11 Desktop Customizer",
+    "copyright": "Copyright 2026",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "overlay.html",
+      "plugins-external/**/*",
+      "config/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "plugins-external",
+        "to": "plugins-external"
+      }
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "assets/icon.ico",
+      "requestedExecutionLevel": "asInvoker",
+      "sign": false,
+      "signingHashAlgorithms": null,
+      "signDlls": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Win11 Desktop Customizer",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico"
+    }
+  }
+}

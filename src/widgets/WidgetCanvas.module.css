@@ -1,0 +1,450 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── Toolbar ─────────────────────────── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 12px;
+}
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Tool toggle buttons ─────────────── */
+.toolBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  white-space: nowrap;
+}
+.toolBtn:hover { border-color: var(--border-md); color: var(--text-primary); }
+.toolBtnActive {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.toolBtnLabel { font-size: 11px; }
+
+.addBtn {
+  padding: 8px 20px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-md);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity var(--t-fast);
+}
+.addBtn:hover:not(:disabled) { opacity: 0.85; }
+.addBtn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── Canvas ──────────────────────────── */
+.canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle, var(--border) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: 12px 12px;
+}
+
+.empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  pointer-events: none;
+}
+.emptyIcon { font-size: 40px; opacity: 0.15; }
+.empty p   { font-size: 13px; color: var(--text-muted); }
+.emptyHint { font-size: 11px; color: var(--text-muted); opacity: 0.6; font-family: var(--font-mono); }
+
+/* ── Picker ──────────────────────────── */
+.picker {
+  position: absolute;
+  top: 66px;
+  right: 24px;
+  width: 230px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-md);
+  border-radius: var(--r-lg);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+  z-index: 200;
+  overflow: hidden;
+}
+.pickerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.pickerClose {
+  background: none; border: none;
+  color: var(--text-muted); cursor: pointer; font-size: 12px;
+}
+.pickerClose:hover { color: var(--text-primary); }
+.pickerList { padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+.pickerItem {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  background: transparent; border: none; border-radius: var(--r-md);
+  cursor: pointer; color: var(--text-primary);
+  font-family: var(--font-ui); font-size: 13px;
+  transition: background var(--t-fast); text-align: left;
+}
+.pickerItem:hover { background: var(--bg-hover); }
+.pickerIcon { font-size: 20px; flex-shrink: 0; }
+.pickerInfo { display: flex; flex-direction: column; gap: 2px; }
+.pickerName { font-size: 13px; }
+.pickerSize { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); }
+
+/* ── Widget ──────────────────────────── */
+.widget {
+  position: absolute;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  transition: box-shadow var(--t-mid), border-color var(--t-mid);
+}
+.widget:hover { border-color: var(--border-md); box-shadow: 0 8px 32px rgba(0,0,0,0.45); }
+.dragging {
+  cursor: grabbing !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.6), 0 0 0 1px var(--accent-dim) !important;
+  z-index: 999;
+}
+.resizing {
+  border-color: var(--ok) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(62,207,142,0.3) !important;
+  z-index: 998;
+}
+.widgetLocked { cursor: default !important; opacity: 0.85; }
+
+.widgetHeader {
+  display: flex; align-items: center;
+  padding: 7px 10px; gap: 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  flex-shrink: 0;
+}
+.widgetDragIcon { font-size: 13px; color: var(--text-muted); flex-shrink: 0; }
+.widgetTitle {
+  flex: 1;
+  font-size: 11px; font-weight: 500;
+  color: var(--text-secondary); letter-spacing: 0.04em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.widgetClose {
+  background: none; border: none;
+  color: var(--text-muted); cursor: pointer; font-size: 11px;
+  padding: 2px 5px; border-radius: 4px;
+  transition: background var(--t-fast), color var(--t-fast);
+  flex-shrink: 0;
+}
+.widgetClose:hover { background: var(--err); color: #fff; }
+
+.widgetBody { flex: 1; overflow: hidden; cursor: default; }
+.widgetLoading {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%; color: var(--text-muted); font-family: var(--font-mono); font-size: 12px;
+}
+
+/* ── Resize handle ───────────────────── */
+.resizeHandle {
+  position: absolute;
+  right: 0; bottom: 0;
+  width: 18px; height: 18px;
+  cursor: se-resize;
+  display: flex; align-items: flex-end; justify-content: flex-end;
+  padding: 3px;
+}
+.resizeHandle::after {
+  content: '⊿';
+  font-size: 12px;
+  color: var(--text-muted);
+  opacity: 0.4;
+  transition: opacity var(--t-fast);
+}
+.resizeHandle:hover::after { opacity: 1; color: var(--accent); }
+.resizeHandleActive::after { opacity: 1; color: var(--ok); }
+
+.loading {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%; color: var(--text-muted); font-size: 13px;
+}
+
+/* ── Overlay status bar ──────────────── */
+.overlayBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 24px;
+  background: rgba(62, 207, 142, 0.08);
+  border-bottom: 1px solid rgba(62, 207, 142, 0.2);
+  font-size: 12px;
+  color: var(--ok);
+  flex-shrink: 0;
+}
+.overlayDot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  flex-shrink: 0;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+.overlayEditHint {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+}
+
+/* ── Toolbar divider ─────────────────── */
+.divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border-md);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* ── Disabled tool button ────────────── */
+.toolBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Z-level selector ────────────────── */
+.zBtn {
+  display: flex; align-items: center; gap: 3px;
+  background: none; border: 1px solid var(--border);
+  border-radius: 4px; padding: 1px 6px;
+  font-size: 10px; cursor: pointer;
+  transition: border-color var(--t-fast);
+  font-family: var(--font-ui);
+}
+.zBtn:hover { border-color: var(--border-md); }
+.zBtnLabel { font-size: 9px; }
+
+.zMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-md);
+  border-radius: var(--r-md);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  z-index: 1000;
+  overflow: hidden;
+  min-width: 90px;
+}
+.zMenuItem {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  background: none; border: none;
+  font-family: var(--font-ui); font-size: 12px;
+  cursor: pointer; width: 100%; text-align: left;
+  transition: background var(--t-fast);
+}
+.zMenuItem:hover { background: var(--bg-hover); }
+.zMenuItemActive { background: var(--accent-dim) !important; }
+
+/* ── Overlay level menu ──────────────── */
+.levelMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 240px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-md);
+  border-radius: var(--r-lg);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  z-index: 500;
+  overflow: hidden;
+}
+.levelMenuTitle {
+  padding: 10px 14px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+.levelMenuItem {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px;
+  background: none; border: none;
+  width: 100%; text-align: left;
+  cursor: pointer; font-family: var(--font-ui);
+  transition: background var(--t-fast);
+}
+.levelMenuItem:hover { background: var(--bg-hover); }
+.levelMenuItemActive { background: var(--accent-dim) !important; }
+.levelMenuIcon { font-size: 16px; flex-shrink: 0; width: 20px; text-align: center; }
+.levelMenuInfo { display: flex; flex-direction: column; gap: 2px; }
+.levelMenuLabel { font-size: 13px; color: var(--text-primary); }
+.levelMenuDesc  { font-size: 11px; color: var(--text-muted); }
+
+.divider {
+  width: 1px; height: 20px;
+  background: var(--border-md);
+  flex-shrink: 0;
+}
+
+/* ── Widget header actions ───────────── */
+.widgetActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ── Z-level button（アイコンのみ版）── */
+.zBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast);
+  flex-shrink: 0;
+}
+.zBtn:hover, .zBtnOpen {
+  background: var(--bg-hover);
+  border-color: var(--border-md);
+}
+
+/* ── Z menu ──────────────────────────── */
+.zMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  width: 110px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-md);
+  border-radius: var(--r-md);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  z-index: 1000;
+  overflow: hidden;
+}
+.zMenuHeader {
+  padding: 6px 10px 4px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+.zMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: background var(--t-fast);
+}
+.zMenuItem:hover { background: var(--bg-hover); }
+.zMenuItemActive { background: var(--accent-dim) !important; }
+.zMenuItemIcon  { font-size: 12px; flex-shrink: 0; }
+.zMenuItemLabel { font-size: 12px; flex: 1; color: var(--text-primary); }
+.zMenuItemCheck { font-size: 10px; color: var(--accent); }
+
+/* ── Desktop visible toggle ──────────── */
+.visBtn {
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: 1px solid transparent;
+  border-radius: 4px; font-size: 12px; cursor: pointer;
+  transition: all var(--t-fast);
+}
+.visBtnOn  { color: var(--ok); }
+.visBtnOff { color: var(--text-muted); opacity: 0.5; }
+.visBtn:hover { background: var(--bg-hover); border-color: var(--border-md); }
+
+/* ── Widget hidden state ─────────────── */
+.widgetHidden {
+  opacity: 0.5;
+  border-style: dashed !important;
+}
+
+/* ── Z menu with desc ────────────────── */
+.zMenu {
+  width: 160px;
+  background: var(--bg-panel); border: 1px solid var(--border-md);
+  border-radius: var(--r-md); box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  z-index: 1000; overflow: hidden;
+}
+.zMenuHeader {
+  padding: 6px 10px 4px; font-size: 10px; font-weight: 500;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-muted); border-bottom: 1px solid var(--border);
+}
+.zMenuItem {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  background: none; border: none; width: 100%; text-align: left;
+  cursor: pointer; font-family: var(--font-ui); transition: background var(--t-fast);
+}
+.zMenuItem:hover { background: var(--bg-hover); }
+.zMenuItemActive { background: var(--accent-dim) !important; }
+.zMenuItemIcon  { font-size: 12px; flex-shrink: 0; width: 16px; }
+.zMenuItemInfo  { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+.zMenuItemLabel { font-size: 12px; color: var(--text-primary); }
+.zMenuItemDesc  { font-size: 10px; color: var(--text-muted); }
+.zMenuItemCheck { font-size: 10px; color: var(--accent); }

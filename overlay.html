@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Win11 Customizer - Overlay</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body, #overlay-root {
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background: transparent !important;
+        -webkit-font-smoothing: antialiased;
+        user-select: none;
+        font-family: 'Syne', sans-serif;
+      }
+      :root {
+        --accent: #5b8cff;
+        --accent-dim: rgba(91,140,255,0.18);
+        --bg-card: #181818;
+        --bg-panel: #111111;
+        --bg-hover: #222222;
+        --border: rgba(255,255,255,0.08);
+        --border-md: rgba(255,255,255,0.14);
+        --text-primary: rgba(255,255,255,0.92);
+        --text-secondary: rgba(255,255,255,0.52);
+        --text-muted: rgba(255,255,255,0.28);
+        --ok: #3ecf8e; --warn: #f5a623; --err: #f05d5d;
+        --font-ui: 'Syne', sans-serif;
+        --font-mono: 'JetBrains Mono', monospace;
+        --r-sm: 6px; --r-md: 10px; --r-lg: 16px;
+        --t-fast: 120ms ease; --t-mid: 200ms ease;
+      }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="overlay-root"></div>
+    <!-- ★ Bug2修正: dev時は絶対パス /src/overlay.jsx で解決 -->
+    <script type="module" src="/src/overlay.jsx"></script>
+  </body>
+</html>

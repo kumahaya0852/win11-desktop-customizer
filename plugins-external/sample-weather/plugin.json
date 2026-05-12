@@ -1,0 +1,9 @@
+{
+  "id": "sample-weather",
+  "name": "天気ウィジェット (サンプル)",
+  "version": "1.0.0",
+  "author": "example",
+  "icon": "🌤",
+  "tags": ["widget", "weather", "sample"],
+  "description": "外部プラグインのサンプルです。Plugin API を使ってウィジェットを登録します。実際の天気データは取得せず、固定値を表示します。"
+}

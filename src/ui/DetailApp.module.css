@@ -1,0 +1,95 @@
+.shell {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  background: #0a0a0f;
+  position: relative; overflow: hidden;
+}
+
+.bg { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.glow1, .glow2 { position: absolute; inset: 0; transition: background 1.2s ease; }
+
+/* ── タイトルバー ────────────────────── */
+.titlebar {
+  position: relative; z-index: 10;
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 12px 0 20px;
+  height: 40px;
+  background: rgba(8,8,18,0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.titlebarLogo { font-size: 16px; filter: drop-shadow(0 0 6px currentColor); }
+.titlebarText { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.6); flex: 1; }
+
+.winBtns { display: flex; }
+.winBtn {
+  width: 42px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none;
+  color: rgba(255,255,255,0.35); font-size: 12px;
+  font-family: var(--font-mono); cursor: pointer;
+  transition: all 150ms ease;
+}
+.winBtn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.9); }
+.winBtnClose:hover { background: var(--err); color: #fff; }
+
+/* ── ボディ ──────────────────────────── */
+.body {
+  position: relative; z-index: 1;
+  flex: 1; display: flex; overflow: hidden;
+}
+
+/* ── サイドナビ ──────────────────────── */
+.nav {
+  width: 72px;
+  display: flex; flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  background: rgba(6,6,14,0.6);
+  border-right: 1px solid rgba(255,255,255,0.05);
+  gap: 2px; flex-shrink: 0;
+}
+
+.navBtn {
+  position: relative;
+  width: 100%;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; padding: 10px 4px;
+  background: none; border: none;
+  color: rgba(255,255,255,0.3);
+  cursor: pointer; font-family: var(--font-ui);
+  border-radius: 10px;
+  transition: all 200ms ease;
+}
+.navBtn:hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.05); }
+.navBtnActive {
+  color: var(--a, var(--accent)) !important;
+  background: rgba(255,255,255,0.07) !important;
+}
+.navIndicator {
+  position: absolute; left: 0; top: 20%; bottom: 20%;
+  width: 3px; border-radius: 0 3px 3px 0;
+}
+.navIcon  { font-size: 18px; }
+.navLabel { font-size: 9px; font-weight: 500; letter-spacing: .04em; }
+
+/* ── メインパネル ────────────────────── */
+.main {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden;
+}
+
+.panelHeader {
+  padding: 20px 28px 0;
+  flex-shrink: 0;
+}
+.panelTitle {
+  font-size: 20px; font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: -0.02em;
+}
+
+.panelContent {
+  flex: 1; overflow-y: auto;
+}

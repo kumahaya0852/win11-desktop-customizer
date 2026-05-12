@@ -1,0 +1,112 @@
+/* ── Card ───────────────────────────── */
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  transition: border-color var(--t-mid);
+}
+.card:hover { border-color: var(--border-md); }
+
+.danger { border-color: rgba(240,93,93,0.2); background: rgba(240,93,93,0.04); }
+.danger:hover { border-color: rgba(240,93,93,0.4); }
+
+.cardInfo { display: flex; align-items: flex-start; gap: 16px; flex: 1; min-width: 0; }
+.cardIcon  { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
+.cardTitle { font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; }
+.cardDesc  { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+
+/* ── Action Buttons ─────────────────── */
+.actionBtn {
+  padding: 9px 20px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--r-md);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity var(--t-fast);
+}
+.actionBtn:hover { opacity: 0.85; }
+
+.secondary {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-md);
+}
+.secondary:hover { color: var(--text-primary); border-color: var(--text-muted); opacity: 1; }
+
+.dangerBtn {
+  background: var(--err);
+}
+
+/* ── Confirm row ────────────────────── */
+.confirmRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.confirmText {
+  font-size: 12px;
+  color: var(--err);
+  white-space: nowrap;
+}
+
+/* ── Info Grid ──────────────────────── */
+.infoGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.infoRow {
+  display: flex;
+  align-items: center;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
+}
+.infoRow:last-child { border-bottom: none; }
+.infoLabel {
+  width: 140px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.infoValue {
+  font-size: 12px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+/* ── Toast ──────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 9999;
+  pointer-events: none;
+  animation: fadeIn 0.2s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.ok  { background: var(--ok);  color: #0a0a0a; }
+.err { background: var(--err); color: #fff; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(8px); } }
