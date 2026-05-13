@@ -274,7 +274,16 @@ export default function MediaPlayerWidget() {
   const accentRgb = hexToRgb(accentHex)
   const info      = useMediaInfo()
   const { enabled, error, start, stop } = useAudioVisualizer(canvasRef, accentRef)
-  const isPlaying = info.status === 'Playing'
+
+  // ローカルのトグル状態（ボタン押下で即反映、曲が変わったらリセット）
+  const [localPlaying, setLocalPlaying] = useState(null)
+  useEffect(() => { setLocalPlaying(null) }, [info.title])
+  const isPlaying = localPlaying !== null ? localPlaying : info.status === 'Playing'
+
+  const handleToggle = () => {
+    setLocalPlaying(p => p !== null ? !p : info.status !== 'Playing')
+    window.api?.media?.toggle?.()
+  }
   const progress  = info.duration > 0 ? Math.min(1, info.position / info.duration) : 0
 
   // 回転角（アイドルでもじっくり動く）
@@ -426,7 +435,7 @@ export default function MediaPlayerWidget() {
         gap: 10, padding: '4px 14px 10px', flexShrink: 0,
       }}>
         <CtrlBtn onClick={() => window.api?.media?.prev?.()}    accentRgb={accentRgb}>⏮</CtrlBtn>
-        <CtrlBtn onClick={() => window.api?.media?.toggle?.()}  accentRgb={accentRgb} large>
+        <CtrlBtn onClick={handleToggle} accentRgb={accentRgb} large>
           {isPlaying ? '⏸' : '▶'}
         </CtrlBtn>
         <CtrlBtn onClick={() => window.api?.media?.next?.()}    accentRgb={accentRgb}>⏭</CtrlBtn>

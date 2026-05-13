@@ -6,7 +6,7 @@
  */
 const { execFile }        = require('child_process')
 const { desktopCapturer } = require('electron')
-const { getYtThumb }      = require('./ytthumb')
+const { getYtThumb, getYtTitle, getYtAuthor, getYtStatus, toggleYtPlaying, isYtActive } = require('./ytthumb')
 
 function runPS(script) {
   return new Promise((resolve, reject) => {
@@ -81,16 +81,35 @@ function register(ipcMain) {
     try {
       const out  = await runPS(PS_GET_INFO)
       const info = JSON.parse(out || '{"ok":false}')
-      if (!info.ok) { thumbCache = { key: null, data: null, fetching: false }; return info }
 
-      // デバッグ: SMTCのapp IDとYTサムネ状態をログ
+      // ytThumbは ok:false でも確認する（YouTubeはSMTCに出ないことがある）
       const ytThumb = getYtThumb()
-      console.log('[media] app:', info.app, '| ytThumb:', ytThumb ? ytThumb.slice(0, 60) : null)
 
-      // ytThumbがあれば（ブラウザ判定なしで）優先使用
-      if (ytThumb) {
-        info.thumbnail = ytThumb
+      if (!info.ok) {
+        thumbCache = { key: null, data: null, fetching: false }
+        // YouTube Music / YouTube 再生中（サムネ取得中でもタイトルがあれば表示）
+        if (isYtActive()) {
+          return { ok: true,
+                   title:     getYtTitle()  || '（取得中...）',
+                   artist:    getYtAuthor() || 'YouTube Music',
+                   status:    'Playing',
+                   position:  0, duration: 0,
+                   thumbnail: ytThumb || null,
+                   fromYT:    true }
+        }
         return info
+      }
+
+      // YouTube / YouTube Music が再生中なら SMTC を無視して YT データを使う
+      if (isYtActive()) {
+        return { ok: true,
+                 title:     getYtTitle()  || info.title  || '（取得中...）',
+                 artist:    getYtAuthor() || info.artist || 'YouTube Music',
+                 status:    getYtStatus(),
+                 position:  info.position,
+                 duration:  info.duration,
+                 thumbnail: ytThumb || null,
+                 fromYT:    true }
       }
 
       // それ以外はSMTCサムネ（Spotify等）
@@ -115,9 +134,37 @@ function register(ipcMain) {
     }
   })
 
-  ipcMain.handle('media:toggle', () => runPS(psAction('TryTogglePlayPauseAsync')).catch(() => {}))
-  ipcMain.handle('media:next',   () => runPS(psAction('TrySkipNextAsync')).catch(() => {}))
-  ipcMain.handle('media:prev',   () => runPS(psAction('TrySkipPreviousAsync')).catch(() => {}))
+  // メディアキー送信（YouTube Music など SMTC 非対応アプリ用）
+  // VK_MEDIA_PLAY_PAUSE=0xB3 / VK_MEDIA_NEXT_TRACK=0xB0 / VK_MEDIA_PREV_TRACK=0xB1
+  function sendMediaKey(vk) {
+    const script = `
+Add-Type -TypeDefinition @"
+using System.Runtime.InteropServices;
+public class MK {
+  [DllImport("user32.dll")] public static extern void keybd_event(byte v,byte s,int f,int e);
+  public static void Press(byte v){keybd_event(v,0,0,0);keybd_event(v,0,2,0);}
+}
+"@
+[MK]::Press(${vk})
+`
+    return runPS(script).catch(() => {})
+  }
+
+  ipcMain.handle('media:toggle', async () => {
+    if (isYtActive()) {
+      toggleYtPlaying()        // UI 状態を即反映
+      return sendMediaKey(0xB3)
+    }
+    return runPS(psAction('TryTogglePlayPauseAsync')).catch(() => {})
+  })
+  ipcMain.handle('media:next', async () => {
+    if (isYtActive()) return sendMediaKey(0xB0)
+    return runPS(psAction('TrySkipNextAsync')).catch(() => {})
+  })
+  ipcMain.handle('media:prev', async () => {
+    if (isYtActive()) return sendMediaKey(0xB1)
+    return runPS(psAction('TrySkipPreviousAsync')).catch(() => {})
+  })
 
   ipcMain.handle('desktopCapturer:getSources', async () => {
     try {
