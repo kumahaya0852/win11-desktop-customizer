@@ -1,95 +1,342 @@
+/* ═══════════════════════════════════════════════════
+   DetailApp — 近未来グラスモーフィズム UI
+   ═══════════════════════════════════════════════════ */
+
 .shell {
   width: 100%; height: 100%;
   display: flex; flex-direction: column;
-  background: #0a0a0f;
+  background: #05050e;
   position: relative; overflow: hidden;
+  font-family: var(--font-ui, 'Segoe UI', sans-serif);
+  --accent-glow: rgba(91, 140, 255, 0.4);
 }
 
-.bg { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
-.glow1, .glow2 { position: absolute; inset: 0; transition: background 1.2s ease; }
+/* ── 背景レイヤー ──────────────────────────────────── */
+.bg {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 0; overflow: hidden;
+}
 
-/* ── タイトルバー ────────────────────── */
+/* パースペクティブグリッド */
+.bgGrid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 52px 52px;
+}
+
+/* ノイズテクスチャ（疑似） */
+.bgNoise {
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.4;
+}
+
+/* アンビエントオーブ */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+}
+.orb1 {
+  width: 480px; height: 480px;
+  left: -120px; top: -120px;
+  background: var(--accent, #5b8cff);
+  opacity: 0.18;
+  animation: orbFloat1 16s ease-in-out infinite alternate;
+}
+.orb2 {
+  width: 360px; height: 360px;
+  right: -80px; bottom: -60px;
+  background: #7c3aed;
+  opacity: 0.16;
+  animation: orbFloat2 20s ease-in-out infinite alternate;
+  animation-delay: -8s;
+}
+.orb3 {
+  width: 220px; height: 220px;
+  left: 45%; top: 55%;
+  background: #06b6d4;
+  opacity: 0.10;
+  animation: orbFloat3 24s ease-in-out infinite alternate;
+  animation-delay: -14s;
+}
+
+/* スキャンライン */
+.scan {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,0.06) 3px,
+    rgba(0,0,0,0.06) 4px
+  );
+}
+
+/* ── タイトルバー ─────────────────────────────────── */
 .titlebar {
   position: relative; z-index: 10;
-  display: flex; align-items: center; gap: 10px;
-  padding: 0 12px 0 20px;
+  display: flex; align-items: stretch;
   height: 40px;
-  background: rgba(8,8,18,0.7);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(5,5,14,0.82);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-bottom: 1px solid rgba(255,255,255,0.055);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* 底辺アクセントライン（流れるグロー） */
+.titlebar::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--accent, #5b8cff) 35%,
+    rgba(120,200,255,0.9) 50%,
+    var(--accent, #5b8cff) 65%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: accentFlow 4s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+/* ドラッグ領域 */
+.titlebarDrag {
+  flex: 1;
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 0 0 18px;
+}
+
+.titlebarLogo {
+  font-size: 16px;
+  animation: logoPulse 3s ease-in-out infinite alternate;
   flex-shrink: 0;
 }
-.titlebarLogo { font-size: 16px; filter: drop-shadow(0 0 6px currentColor); }
-.titlebarText { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.6); flex: 1; }
+.titlebarTitle {
+  font-size: 12px; font-weight: 600;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: .08em; text-transform: uppercase;
+}
+.titlebarSep {
+  width: 1px; height: 14px;
+  background: rgba(255,255,255,0.1);
+  flex-shrink: 0;
+}
+.titlebarSub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.22);
+  letter-spacing: .04em;
+}
 
-.winBtns { display: flex; }
+/* ウィンドウボタン */
+.winBtns { display: flex; flex-shrink: 0; }
 .winBtn {
-  width: 42px; height: 40px;
+  width: 44px; height: 40px;
   display: flex; align-items: center; justify-content: center;
   background: none; border: none;
-  color: rgba(255,255,255,0.35); font-size: 12px;
-  font-family: var(--font-mono); cursor: pointer;
-  transition: all 150ms ease;
+  color: rgba(255,255,255,0.28); font-size: 12px;
+  cursor: pointer; transition: all 140ms ease;
+  font-family: var(--font-mono, monospace);
 }
-.winBtn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.9); }
-.winBtnClose:hover { background: var(--err); color: #fff; }
+.winBtn:hover {
+  background: rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.85);
+}
+.winBtnClose:hover { background: #dc2626; color: #fff; }
 
-/* ── ボディ ──────────────────────────── */
+/* ── ボディ ───────────────────────────────────────── */
 .body {
   position: relative; z-index: 1;
   flex: 1; display: flex; overflow: hidden;
 }
 
-/* ── サイドナビ ──────────────────────── */
+/* ── サイドナビ ───────────────────────────────────── */
 .nav {
-  width: 72px;
+  width: 78px;
   display: flex; flex-direction: column;
   align-items: center;
-  padding: 12px 0;
-  background: rgba(6,6,14,0.6);
-  border-right: 1px solid rgba(255,255,255,0.05);
+  padding: 14px 0 10px;
+  background: rgba(4,4,12,0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255,255,255,0.04);
   gap: 2px; flex-shrink: 0;
+  position: relative;
+}
+
+/* ナビ右端グロー線 */
+.nav::after {
+  content: '';
+  position: absolute; right: 0; top: 10%; bottom: 10%; width: 1px;
+  background: linear-gradient(
+    180deg, transparent, var(--accent, #5b8cff) 45%,
+    var(--accent, #5b8cff) 55%, transparent
+  );
+  animation: navEdgeGlow 4s ease-in-out infinite alternate;
 }
 
 .navBtn {
   position: relative;
-  width: 100%;
+  width: 62px;
   display: flex; flex-direction: column; align-items: center;
-  gap: 4px; padding: 10px 4px;
+  gap: 5px; padding: 10px 0 8px;
   background: none; border: none;
-  color: rgba(255,255,255,0.3);
-  cursor: pointer; font-family: var(--font-ui);
-  border-radius: 10px;
-  transition: all 200ms ease;
+  color: rgba(255,255,255,0.22);
+  cursor: pointer; font-family: inherit;
+  border-radius: 14px;
+  transition: color 200ms ease, transform 200ms ease;
+  overflow: hidden;
 }
-.navBtn:hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.05); }
+
+/* ホバー時の内側グロー */
+.navBtn::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: 14px;
+  background: radial-gradient(ellipse at center,
+    rgba(255,255,255,0.06) 0%, transparent 70%);
+  opacity: 0; transition: opacity 200ms;
+}
+.navBtn:hover { color: rgba(255,255,255,0.65); transform: translateY(-1px); }
+.navBtn:hover::before { opacity: 1; }
+
 .navBtnActive {
   color: var(--a, var(--accent)) !important;
-  background: rgba(255,255,255,0.07) !important;
 }
-.navIndicator {
-  position: absolute; left: 0; top: 20%; bottom: 20%;
-  width: 3px; border-radius: 0 3px 3px 0;
+.navBtnActive::before {
+  background: radial-gradient(ellipse at center,
+    rgba(91,140,255,0.12) 0%, transparent 70%);
+  opacity: 1 !important;
 }
-.navIcon  { font-size: 18px; }
-.navLabel { font-size: 9px; font-weight: 500; letter-spacing: .04em; }
 
-/* ── メインパネル ────────────────────── */
+/* アクティブ左インジケーター */
+.navIndicator {
+  position: absolute; left: 0; top: 22%; bottom: 22%;
+  width: 2px; border-radius: 0 2px 2px 0;
+  animation: indicatorPulse 2s ease-in-out infinite alternate;
+}
+
+.navIcon {
+  font-size: 20px; line-height: 1;
+  transition: transform 200ms ease, filter 200ms ease;
+}
+.navBtn:hover .navIcon { transform: scale(1.12); }
+.navBtnActive .navIcon {
+  filter: drop-shadow(0 0 8px var(--a, var(--accent)));
+}
+
+.navLabel {
+  font-size: 9px; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase;
+  transition: opacity 200ms;
+}
+
+/* ナビ下部区切り */
+.navDivider {
+  width: 32px; height: 1px;
+  background: rgba(255,255,255,0.06);
+  margin: 6px 0; flex-shrink: 0;
+}
+
+/* ── メインパネル ─────────────────────────────────── */
 .main {
   flex: 1; display: flex; flex-direction: column; overflow: hidden;
+  position: relative;
 }
 
+/* ── パネルヘッダー ───────────────────────────────── */
 .panelHeader {
-  padding: 20px 28px 0;
+  padding: 22px 32px 16px;
   flex-shrink: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  position: relative;
+}
+
+/* ヘッダー底辺グロー */
+.panelHeader::after {
+  content: '';
+  position: absolute; bottom: 0; left: 32px; right: 32px; height: 1px;
+  background: linear-gradient(
+    90deg, var(--accent, #5b8cff), transparent
+  );
+  opacity: 0.25;
+}
+
+.panelTitleRow {
+  display: flex; align-items: flex-end; gap: 14px;
 }
 .panelTitle {
-  font-size: 20px; font-weight: 600;
-  color: rgba(255,255,255,0.9);
-  letter-spacing: -0.02em;
+  font-size: 22px; font-weight: 700;
+  color: rgba(255,255,255,0.93);
+  letter-spacing: -0.03em; line-height: 1;
+}
+.panelTitleAccent {
+  height: 3px; width: 28px; margin-bottom: 3px;
+  background: var(--accent, #5b8cff);
+  border-radius: 99px;
+  animation: accentBar 2.5s ease-in-out infinite alternate;
+  flex-shrink: 0;
 }
 
+/* ── パネルコンテンツ ─────────────────────────────── */
 .panelContent {
   flex: 1; overflow-y: auto;
+  animation: panelIn 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.panelContent::-webkit-scrollbar { width: 4px; }
+.panelContent::-webkit-scrollbar-track { background: transparent; }
+.panelContent::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.12); border-radius: 99px;
+}
+.panelContent::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.22);
+}
+
+/* ── アニメーション定義 ───────────────────────────── */
+@keyframes orbFloat1 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(28px, -22px) scale(1.07); }
+}
+@keyframes orbFloat2 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(-22px, 18px) scale(1.04); }
+}
+@keyframes orbFloat3 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(18px, -28px) scale(1.1); }
+}
+
+@keyframes accentFlow {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes logoPulse {
+  from { filter: drop-shadow(0 0 3px currentColor); opacity: 0.85; }
+  to   { filter: drop-shadow(0 0 10px currentColor); opacity: 1; }
+}
+
+@keyframes navEdgeGlow {
+  from { opacity: 0.15; }
+  to   { opacity: 0.5; }
+}
+
+@keyframes indicatorPulse {
+  from { box-shadow: 0 0 4px currentColor; opacity: 0.8; }
+  to   { box-shadow: 0 0 12px currentColor; opacity: 1; }
+}
+
+@keyframes accentBar {
+  from { width: 20px; opacity: 0.65; }
+  to   { width: 36px; opacity: 1; }
+}
+
+@keyframes panelIn {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: translateX(0); }
 }

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { getActiveMode, getModeList, applyMode } from '../core/modeManager'
 import { useWidgets } from '../hooks/useWidgets'
 import { useTheme } from '../hooks/useTheme'
+import { getAll } from '../widgets/WidgetRegistry'
 import bus from '../core/eventBus'
 import styles from './Drawer.module.css'
 
@@ -15,27 +16,23 @@ const THEME_PRESETS = [
 
 export default function Drawer() {
   const [open,        setOpen]        = useState(false)
-  const [editMode,    setEditMode]    = useState(false)
+  const [showPicker,  setShowPicker]  = useState(false)
   const [activeMode,  setActiveMode]  = useState(null)
   const [accentColor, setAccentColor] = useState('#5b8cff')
-  const { widgets, updateWidget } = useWidgets()
+  const { widgets, addWidget, removeWidget } = useWidgets()
   const { theme, apply: applyTheme } = useTheme()
 
   // クリックスルー制御
   useEffect(() => {
-    if (editMode) return  // 編集中は setEditLayout が制御する
     window.api?.window?.setClickThrough?.(!open)
-  }, [open, editMode])
+  }, [open])
 
-  // 編集モード切り替え
+  // オーバーレイ編集モード開始時にドロワーを閉じる
   useEffect(() => {
-    if (editMode) {
-      setOpen(false)
-      window.api?.window?.setEditLayout?.(true)
-    } else {
-      window.api?.window?.setEditLayout?.(false)
-    }
-  }, [editMode])
+    if (!window.api) return
+    const handler = (enabled) => { if (enabled) setOpen(false) }
+    window.api.on('overlay:editMode', handler)
+  }, [])
 
   useEffect(() => {
     getActiveMode().then(m => setActiveMode(m))
@@ -61,24 +58,6 @@ export default function Drawer() {
       applyToSystem: false,
     })
     setAccentColor(preset.accent)
-  }
-
-  if (editMode) {
-    return (
-      <EditCanvas
-        widgets={widgets}
-        accentColor={accentColor}
-        onDone={() => setEditMode(false)}
-        onMove={(id, x, y) => {
-          updateWidget(id, { x, y })
-          window.api?.widgets?.setPosition?.(id, x, y)
-        }}
-        onResize={(id, w, h) => {
-          updateWidget(id, { w, h })
-          window.api?.widgets?.resize?.(id, w, h)
-        }}
-      />
-    )
   }
 
   return (
@@ -137,36 +116,65 @@ export default function Drawer() {
           <section className={styles.section}>
             <div className={styles.sectionTitleRow}>
               <span className={styles.sectionTitle}>ウィジェット</span>
-              <button
-                className={styles.editBtn}
-                style={{ '--accent': accentColor }}
-                onClick={() => setEditMode(true)}
-              >
-                ✏ 配置を編集
-              </button>
+              <div className={styles.sectionBtns}>
+                <button
+                  className={styles.addBtn}
+                  style={{ '--accent': accentColor }}
+                  onClick={() => setShowPicker(v => !v)}
+                >
+                  ＋ 追加
+                </button>
+                <button
+                  className={styles.editBtn}
+                  style={{ '--accent': accentColor }}
+                  onClick={() => window.api?.overlay?.setEditMode?.(true)}
+                >
+                  ✏ 配置を編集
+                </button>
+              </div>
             </div>
+            {showPicker && (
+              <DrawerWidgetPicker
+                accentColor={accentColor}
+                onSelect={(type) => {
+                  const snap = v => Math.round(v / 12) * 12
+                  addWidget(type, {
+                    x: snap(60 + (widgets.length % 8) * 24),
+                    y: snap(60 + (widgets.length % 8) * 24),
+                  })
+                  setShowPicker(false)
+                }}
+                onClose={() => setShowPicker(false)}
+              />
+            )}
             <div className={styles.widgetList}>
               {widgets.length === 0 && (
                 <div className={styles.widgetEmpty}>
                   ウィジェットがありません<br/>
-                  <span style={{ fontSize:10, opacity:0.6 }}>詳細設定から追加できます</span>
+                  <span style={{ fontSize:10, opacity:0.6 }}>「追加」から配置できます</span>
                 </div>
               )}
               {widgets.map(w => (
                 <div key={w.id} className={styles.widgetRow}>
                   <span className={styles.widgetIcon}>{WIDGET_ICONS[w.type] ?? '⊞'}</span>
                   <span className={styles.widgetName}>{getWidgetName(w.type)}</span>
-                  <ToggleSwitch
-                    value={w.visible !== false}
-                    onChange={v => updateWidget(w.id, { visible: v })}
-                    accent={accentColor}
-                  />
+                  <button
+                    className={styles.widgetDeleteBtn}
+                    onClick={() => removeWidget(w.id)}
+                    title="削除"
+                  >✕</button>
                 </div>
               ))}
             </div>
           </section>
 
           <div className={styles.footerBtns}>
+            <button className={styles.wallpaperBtn}
+              onClick={() => window.api?.wallpaperWindow?.open?.()}
+              style={{ '--accent': accentColor }}>
+              <span>🖼</span>
+              <span>壁紙を変更</span>
+            </button>
             <button className={styles.detailBtn}
               onClick={() => window.api?.window?.openDetail?.()}
               style={{ '--accent': accentColor }}>
@@ -180,240 +188,6 @@ export default function Drawer() {
     </div>
   )
 }
-
-// ── 全画面プレビュー編集キャンバス ────────────────────────
-const SNAP = 12
-function snap(v) { return Math.round(v / SNAP) * SNAP }
-
-function EditCanvas({ widgets, accentColor, onDone, onMove, onResize }) {
-  const [dragging, setDragging] = useState(null)
-  const [resizing, setResizing] = useState(null)
-  const [scaleX,   setScaleX]   = useState(1)
-  const [scaleY,   setScaleY]   = useState(1)
-  const dragRef    = useRef(null)
-
-  // プレビュー座標で管理するローカルウィジェット
-  // scaleX/Y が確定してから初期化する
-  const [localWidgets, setLocalWidgets] = useState([])
-  const initialized = useRef(false)
-
-  // workArea を IPC で取得してスケールを確定
-  useEffect(() => {
-    async function init() {
-      let sx = 1, sy = 1
-      try {
-        const wa = await window.api?.app?.workArea?.()
-        if (wa) {
-          sx = window.innerWidth  / wa.width
-          sy = window.innerHeight / wa.height
-        } else {
-          sx = window.innerWidth  / window.screen.availWidth
-          sy = window.innerHeight / window.screen.availHeight
-        }
-      } catch {
-        sx = window.innerWidth  / window.screen.availWidth
-        sy = window.innerHeight / window.screen.availHeight
-      }
-      setScaleX(sx)
-      setScaleY(sy)
-      // スケール確定後に localWidgets を初期化（プレビュー座標に変換）
-      setLocalWidgets(widgets.map(w => ({
-        ...w,
-        vx: w.x * sx,
-        vy: w.y * sy,
-        vw: w.w * sx,
-        vh: w.h * sy,
-      })))
-      initialized.current = true
-    }
-    init()
-  }, [])  // 初回のみ
-
-  function toScreen(px, py) {
-    return { x: Math.round(px / scaleX), y: Math.round(py / scaleY) }
-  }
-
-  function startDrag(e, widget) {
-    e.preventDefault()
-    dragRef.current = {
-      id: widget.id,
-      sx: e.clientX, sy: e.clientY,
-      ox: widget.vx, oy: widget.vy,
-    }
-    setDragging(widget.id)
-
-    const move = (e2) => {
-      if (!dragRef.current) return
-      const nx = Math.max(0, snap(dragRef.current.ox + e2.clientX - dragRef.current.sx))
-      const ny = Math.max(0, snap(dragRef.current.oy + e2.clientY - dragRef.current.sy))
-      // localWidgets の vx/vy を直接更新（_vx/_vy 不使用）
-      setLocalWidgets(prev => prev.map(w =>
-        w.id === widget.id ? { ...w, vx: nx, vy: ny } : w
-      ))
-      const sc = toScreen(nx, ny)
-      window.api?.widgets?.setPosition?.(widget.id, sc.x, sc.y)
-    }
-    const up = (e2) => {
-      if (!dragRef.current) return
-      const nx = Math.max(0, snap(dragRef.current.ox + e2.clientX - dragRef.current.sx))
-      const ny = Math.max(0, snap(dragRef.current.oy + e2.clientY - dragRef.current.sy))
-      const sc = toScreen(nx, ny)
-      // localWidgets を確定座標で更新してから onMove を呼ぶ
-      setLocalWidgets(prev => prev.map(w =>
-        w.id === widget.id ? { ...w, vx: nx, vy: ny, x: sc.x, y: sc.y } : w
-      ))
-      onMove(widget.id, sc.x, sc.y)
-      dragRef.current = null
-      setDragging(null)
-      window.removeEventListener('mousemove', move)
-      window.removeEventListener('mouseup', up)
-    }
-    window.addEventListener('mousemove', move)
-    window.addEventListener('mouseup', up)
-  }
-
-  function startResize(e, widget) {
-    e.preventDefault(); e.stopPropagation()
-    dragRef.current = {
-      id: widget.id,
-      sx: e.clientX, sy: e.clientY,
-      ow: widget.vw, oh: widget.vh,
-    }
-    setResizing(widget.id)
-
-    const move = (e2) => {
-      if (!dragRef.current) return
-      const nw = Math.max(120 * scaleX, snap(dragRef.current.ow + e2.clientX - dragRef.current.sx))
-      const nh = Math.max(80  * scaleY, snap(dragRef.current.oh + e2.clientY - dragRef.current.sy))
-      setLocalWidgets(prev => prev.map(w =>
-        w.id === widget.id ? { ...w, vw: nw, vh: nh } : w
-      ))
-      window.api?.widgets?.resize?.(widget.id, Math.round(nw / scaleX), Math.round(nh / scaleY))
-    }
-    const up = (e2) => {
-      if (!dragRef.current) return
-      const nw = Math.max(120 * scaleX, snap(dragRef.current.ow + e2.clientX - dragRef.current.sx))
-      const nh = Math.max(80  * scaleY, snap(dragRef.current.oh + e2.clientY - dragRef.current.sy))
-      const sw = Math.round(nw / scaleX)
-      const sh = Math.round(nh / scaleY)
-      setLocalWidgets(prev => prev.map(w =>
-        w.id === widget.id ? { ...w, vw: nw, vh: nh, w: sw, h: sh } : w
-      ))
-      onResize(widget.id, sw, sh)
-      dragRef.current = null
-      setResizing(null)
-      window.removeEventListener('mousemove', move)
-      window.removeEventListener('mouseup', up)
-    }
-    window.addEventListener('mousemove', move)
-    window.addEventListener('mouseup', up)
-  }
-
-  if (!initialized.current || localWidgets.length === 0) {
-    return (
-      <div style={{ position:'fixed', inset:0, display:'flex', alignItems:'center',
-        justifyContent:'center', background:'rgba(0,0,0,0.3)', color:'rgba(255,255,255,0.5)',
-        fontSize:14, fontFamily:'var(--font-ui)' }}>
-        読み込み中...
-      </div>
-    )
-  }
-
-  return (
-    <div style={{
-      position: 'fixed', inset: 0,
-      background: 'rgba(0,0,0,0.15)',
-      backdropFilter: 'blur(2px)',
-      cursor: 'default',
-      userSelect: 'none',
-    }}>
-      {/* 完了バー */}
-      <div style={{
-        position: 'absolute', top: 16, left: '50%',
-        transform: 'translateX(-50%)',
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: '8px 20px',
-        background: 'rgba(8,8,18,0.92)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255,255,255,0.14)',
-        borderRadius: 99,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-        zIndex: 100,
-        whiteSpace: 'nowrap',
-      }}>
-        <span style={{ width:8, height:8, borderRadius:'50%', background: accentColor,
-          animation: 'blink 1.2s ease-in-out infinite', flexShrink:0 }} />
-        <span style={{ fontSize:12, color:'rgba(255,255,255,0.8)', fontWeight:500 }}>
-          編集モード — ドラッグで移動・右下でリサイズ
-        </span>
-        <button onClick={onDone} style={{
-          padding: '5px 16px', border:'none', borderRadius:99,
-          background: accentColor, color:'#fff',
-          fontSize:12, fontWeight:600, cursor:'pointer',
-        }}>完了</button>
-      </div>
-
-      {/* ウィジェットプレビュー */}
-      {localWidgets.filter(w => w.visible !== false).map(w => {
-        const isDrag = dragging === w.id
-        const isRes  = resizing === w.id
-        return (
-          <div
-            key={w.id}
-            onMouseDown={(e) => startDrag(e, w)}
-            style={{
-              position: 'absolute',
-              left: w.vx, top: w.vy,
-              width: w.vw, height: w.vh,
-              background: 'rgba(17,17,17,0.6)',
-              border: `2px solid ${isDrag || isRes ? accentColor : 'rgba(255,255,255,0.25)'}`,
-              borderRadius: 12,
-              cursor: isDrag ? 'grabbing' : 'grab',
-              boxShadow: isDrag || isRes
-                ? `0 16px 48px rgba(0,0,0,0.6), 0 0 0 3px ${accentColor}44`
-                : '0 4px 20px rgba(0,0,0,0.4)',
-              transition: isDrag || isRes ? 'none' : 'border-color 0.15s',
-              display: 'flex', flexDirection: 'column', overflow: 'hidden',
-            }}
-          >
-            <div style={{
-              padding: '5px 10px', fontSize: 10,
-              background: 'rgba(0,0,0,0.4)',
-              borderBottom: '1px solid rgba(255,255,255,0.08)',
-              display: 'flex', alignItems: 'center', gap: 6,
-              color: 'rgba(255,255,255,0.6)', flexShrink: 0,
-              fontFamily: 'sans-serif',
-            }}>
-              <span>⠿</span>
-              <span style={{ flex:1 }}>{WIDGET_NAMES[w.type] ?? w.type}</span>
-              <span style={{
-                fontSize: 9, padding:'1px 6px', borderRadius:99,
-                background:`${accentColor}22`, color:accentColor,
-                border:`1px solid ${accentColor}44`,
-              }}>
-                {w.zLevel === 'top' ? '最前面' : w.zLevel === 'bottom' ? '壁紙の上' : '通常'}
-              </span>
-            </div>
-            <div
-              onMouseDown={(e) => startResize(e, w)}
-              style={{
-                position: 'absolute', right:0, bottom:0,
-                width:20, height:20, cursor:'se-resize',
-                display:'flex', alignItems:'flex-end', justifyContent:'flex-end',
-                padding:3, zIndex:10,
-              }}
-            >
-              <span style={{ fontSize:13,
-                color: isRes ? accentColor : 'rgba(255,255,255,0.35)', lineHeight:1 }}>⊿</span>
-            </div>
-          </div>
-        )
-      })}
-      <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
-    </div>
-  )
-}
-
 
 // ── ドラッグで位置変更できるトグルボタン ─────────────────
 const STORAGE_KEY = 'ui.toggle-pos-y'
@@ -517,6 +291,27 @@ function ToggleSwitch({ value, onChange, accent }) {
   )
 }
 
-const WIDGET_NAMES = { clock: '時計', sysmonitor: 'システム監視', note: 'メモ' }
-const WIDGET_ICONS = { clock: '🕐', sysmonitor: '📊', note: '📝' }
+const WIDGET_NAMES = { clock: '時計', sysmonitor: 'システム監視', note: 'メモ', mediaplayer: 'メディアプレイヤー' }
+const WIDGET_ICONS = { clock: '🕐', sysmonitor: '📊', note: '📝', mediaplayer: '🎵' }
 function getWidgetName(type) { return WIDGET_NAMES[type] ?? type }
+
+function DrawerWidgetPicker({ accentColor, onSelect, onClose }) {
+  const defs = getAll()
+  return (
+    <div className={styles.picker} style={{ '--accent': accentColor }}>
+      <div className={styles.pickerHeader}>
+        <span className={styles.pickerTitle}>追加するウィジェット</span>
+        <button className={styles.pickerClose} onClick={onClose}>✕</button>
+      </div>
+      {defs.map(def => (
+        <button key={def.id} className={styles.pickerItem} onClick={() => onSelect(def.id)}>
+          <span className={styles.pickerIcon}>{def.icon}</span>
+          <div className={styles.pickerInfo}>
+            <span className={styles.pickerName}>{def.name}</span>
+            <span className={styles.pickerSize}>{def.defaultSize.w}×{def.defaultSize.h}</span>
+          </div>
+        </button>
+      ))}
+    </div>
+  )
+}

@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Win11 Customizer - YouTube Thumbnail",
+  "version": "1.0",
+  "description": "YouTubeの動画IDをWin11 Customizerに送信してサムネを表示します",
+  "content_scripts": [
+    {
+      "matches": ["*://www.youtube.com/watch*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

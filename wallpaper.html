@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy"
+      content="default-src 'self' localfile:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' localfile:;" />
+    <title>Win11 Customizer - 壁紙</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body, #wallpaper-root {
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background: transparent !important;
+        -webkit-font-smoothing: antialiased;
+        user-select: none;
+      }
+      :root {
+        --accent: #5b8cff;
+        --accent-dim: rgba(91,140,255,0.18);
+        --font-ui: 'Syne', sans-serif;
+        --font-mono: 'JetBrains Mono', monospace;
+        --ok: #4ade80; --err: #f87171;
+      }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="wallpaper-root"></div>
+    <script type="module" src="/src/wallpaper.jsx"></script>
+  </body>
+</html>

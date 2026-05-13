@@ -229,6 +229,29 @@
   transform: translateX(16px);
 }
 
+/* ── 壁紙フォルダボタン ─────────────── */
+.wallpaperBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  color: rgba(255,255,255,0.55);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+  width: 100%;
+}
+.wallpaperBtn:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: var(--accent);
+  color: rgba(255,255,255,0.9);
+}
+
 /* ── 詳細設定ボタン ──────────────────── */
 .detailBtn {
   display: flex;
@@ -352,10 +375,129 @@
   flex-shrink: 0;
 }
 
+/* ── ウィジェット削除ボタン ─────── */
+.widgetDeleteBtn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.25);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: color 150ms, background 150ms;
+  flex-shrink: 0;
+}
+.widgetDeleteBtn:hover {
+  color: #ff6b6b;
+  background: rgba(255,107,107,0.12);
+}
+
+/* ── セクション右ボタン群 ───────── */
+.sectionBtns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── 追加ボタン ──────────────────── */
+.addBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--accent, #5b8cff);
+  border: none;
+  border-radius: 99px;
+  color: #fff;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 200ms ease;
+}
+.addBtn:hover { opacity: 0.85; }
+
+/* ── ウィジェットピッカー ─────────── */
+.picker {
+  background: rgba(18,18,28,0.97);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.pickerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.pickerTitle {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  font-weight: 500;
+}
+.pickerClose {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.3);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 150ms;
+}
+.pickerClose:hover { color: rgba(255,255,255,0.8); }
+.pickerItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.75);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: background 150ms;
+  text-align: left;
+}
+.pickerItem:last-child { border-bottom: none; }
+.pickerItem:hover { background: rgba(255,255,255,0.06); }
+.pickerIcon { font-size: 18px; flex-shrink: 0; }
+.pickerInfo { display: flex; flex-direction: column; gap: 2px; }
+.pickerName { font-size: 12px; font-weight: 500; }
+.pickerSize { font-size: 10px; color: rgba(255,255,255,0.3); }
+
 /* ── フッターボタン群 ────────────── */
 .footerBtns {
   margin-top: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* ── 壁紙変更ボタン ─────────────── */
+.wallpaperBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 12px;
+  color: rgba(255,255,255,0.6);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+  width: 100%;
+}
+.wallpaperBtn:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.85);
 }

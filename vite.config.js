@@ -23,8 +23,10 @@ export default defineConfig({
     base: './',
     rollupOptions: {
       input: {
-        main:    path.resolve(__dirname, 'index.html'),
-        overlay: path.resolve(__dirname, 'overlay.html'),
+        main:      path.resolve(__dirname, 'index.html'),
+        overlay:   path.resolve(__dirname, 'overlay.html'),
+        widget:    path.resolve(__dirname, 'widget.html'),
+        wallpaper: path.resolve(__dirname, 'wallpaper.html'),
       }
     }
   },

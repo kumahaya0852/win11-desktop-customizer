@@ -5,10 +5,9 @@ import { get as getWidgetDef } from '../widgets/WidgetRegistry'
 
 const isElectron = typeof window !== 'undefined' && typeof window.api !== 'undefined'
 
-// 新設計: ウィジェットウィンドウへ即時同期
-function syncToWindows(widgets) {
+// ウィジェット個別ウィンドウへレイアウト変更を送信
+function syncWidgetWindows(widgets) {
   if (!isElectron || !window.api?.widgets) return
-  // visible:true のウィジェットだけウィンドウを作る
   window.api.widgets.syncAll(widgets).catch(() => {})
 }
 
@@ -21,18 +20,30 @@ export function useWidgets() {
     configStore.get('widgets.layout').then(layout => {
       if (Array.isArray(layout)) {
         setWidgets(layout)
-        // ★ Bug2修正: 起動時に既存ウィジェットをデスクトップに同期
-        syncToWindows(layout)
+        // 起動時に main プロセスがすでに widgetWindows.updateLayout を呼んでいるため
+        // ここでは syncWidgetWindows を呼ばない（重複作成を防止）
       }
       setReady(true)
     })
+  }, [])
+
+  // ウィジェットウィンドウからのレイアウト変更（ドラッグ/リサイズ等）を受信して UI 同期
+  useEffect(() => {
+    if (!isElectron) return
+    const handler = (layout) => {
+      if (!Array.isArray(layout)) return
+      setWidgets(layout)
+      // widget ウィンドウはすでに正しい位置にあるので syncWidgetWindows は呼ばない
+    }
+    window.api.on('overlay:syncWidgets', handler)
+    return () => window.api.off('overlay:syncWidgets', handler)
   }, [])
 
   const persist = useCallback((updater) => {
     setWidgets(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
       configStore.set('widgets.layout', next)
-      syncToWindows(next)
+      syncWidgetWindows(next) // ウィジェットウィンドウへ変更を反映
       return next
     })
   }, [])
@@ -45,8 +56,8 @@ export function useWidgets() {
       id, type,
       x: pos.x, y: pos.y,
       w: size.w, h: size.h,
-      zLevel:  'normal',   // ウィジェットウィンドウの z-order
-      visible: true,       // デスクトップ表示するか
+      zLevel:  'normal',
+      visible: true,
       config:  { instanceId: id },
     }
     persist(prev => [...prev, newWidget])
@@ -65,22 +76,8 @@ export function useWidgets() {
   }, [persist])
 
   const removeWidget = useCallback((id) => {
-    // ウィジェットウィンドウも閉じる
-    if (isElectron && window.api?.widgets) {
-      window.api.widgets.remove(id).catch(() => {})
-    }
     persist(prev => prev.filter(w => w.id !== id))
     bus.emit(EVENTS.WIDGET_REMOVED, { id })
-  }, [persist])
-
-  // リサイズ通知を受信してストアに反映
-  useEffect(() => {
-    if (!isElectron) return
-    const handler = ({ id, w, h }) => {
-      persist(prev => prev.map(wid => wid.id === id ? { ...wid, w, h } : wid))
-    }
-    window.api.on('overlay:widgetResized', handler)
-    return () => window.api.off('overlay:widgetResized', handler)
   }, [persist])
 
   return { widgets, addWidget, updateWidget, removeWidget, ready }

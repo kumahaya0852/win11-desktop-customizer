@@ -25,7 +25,7 @@ contextBridge.exposeInMainWorld('api', {
     applyRule:       (rule)    => ipcRenderer.invoke('window:applyRule', rule),
   },
 
-  // ★ Bug6修正: 詳細ウィンドウ専用コントロール
+  // 詳細ウィンドウ専用コントロール
   detail: {
     minimize: () => ipcRenderer.invoke('detail:minimize'),
     maximize: () => ipcRenderer.invoke('detail:maximize'),
@@ -50,35 +50,64 @@ contextBridge.exposeInMainWorld('api', {
     get: ()      => ipcRenderer.invoke('wallpaper:get'),
   },
 
+  wallpaperWindow: {
+    open:  () => ipcRenderer.invoke('wallpaperWindow:open'),
+    close: () => ipcRenderer.invoke('wallpaperWindow:close'),
+  },
+
+  videoWallpaper: {
+    set:  (fp) => ipcRenderer.invoke('videoWallpaper:set', fp),
+    stop: ()   => ipcRenderer.invoke('videoWallpaper:stop'),
+  },
+
+  dialog: {
+    openDir:  ()     => ipcRenderer.invoke('dialog:openDir'),
+    openFile: (opts) => ipcRenderer.invoke('dialog:openFile', opts),
+  },
+
+  wallpaperDir: {
+    list: (dir) => ipcRenderer.invoke('wallpaper:listDir', dir),
+  },
+
   registry: {
     read:  (k, n)    => ipcRenderer.invoke('registry:read', k, n),
     write: (k, n, v) => ipcRenderer.invoke('registry:write', k, n, v),
   },
 
   widgets: {
-    syncAll:      (widgets) => ipcRenderer.invoke('widgets:syncAll', widgets),
+    syncAll:      (layout)  => ipcRenderer.invoke('widgets:syncAll', layout),
     update:       (widget)  => ipcRenderer.invoke('widgets:update', widget),
     remove:       (id)      => ipcRenderer.invoke('widgets:remove', id),
     setEditMode:  (enabled) => ipcRenderer.invoke('widgets:setEditMode', enabled),
     destroyAll:   ()        => ipcRenderer.invoke('widgets:destroyAll'),
     isAnyVisible: ()             => ipcRenderer.invoke('widgets:isAnyVisible'),
     setPosition:  (id, x, y)    => ipcRenderer.invoke('widgets:setPosition', { id, x, y }),
-    // ★ Bug1修正: リサイズ IPC
-    resize:       (id, w, h) => ipcRenderer.invoke('widgets:resize', { id, w, h }),
-    // ★ Bug4修正: moved 通知
-    notifyMoved:  (payload) => ipcRenderer.send('widget:moved', payload),
-    notifyResized:(payload) => ipcRenderer.send('widget:resized', payload),
+    resize:       (id, w, h)    => ipcRenderer.invoke('widgets:resize', { id, w, h }),
+    notifyMoved:  (payload)     => ipcRenderer.send('widget:moved', payload),
+    notifyResized:(payload)     => ipcRenderer.send('widget:resized', payload),
+  },
+
+  // 各ウィジェットウィンドウ専用 API
+  widget: {
+    ready:           (id) => ipcRenderer.invoke('widget:ready', id),
+    setClickThrough: (v)  => ipcRenderer.invoke('widget:setClickThrough', v),
+    expandForResize: ()   => ipcRenderer.invoke('widget:expandForResize'),
+    setSize:         (s)  => ipcRenderer.invoke('widget:setSize', s),
+    commitResize:    (s)  => ipcRenderer.invoke('widget:commitResize', s),
   },
 
   overlay: {
-    show:        ()        => ipcRenderer.invoke('overlay:show'),
-    hide:        ()        => ipcRenderer.invoke('overlay:hide'),
-    isVisible:   ()        => ipcRenderer.invoke('overlay:isVisible'),
-    setEditMode: (e)       => ipcRenderer.invoke('overlay:setEditMode', e),
-    syncWidgets: (l)       => ipcRenderer.invoke('overlay:syncWidgets', l),
-    setLevel:    (l)       => ipcRenderer.invoke('overlay:setLevel', l),
-    getLevel:    ()        => ipcRenderer.invoke('overlay:getLevel'),
-    notifyMoved: (payload) => ipcRenderer.send('widget:moved', payload),
+    show:            ()        => ipcRenderer.invoke('overlay:show'),
+    hide:            ()        => ipcRenderer.invoke('overlay:hide'),
+    isVisible:       ()        => ipcRenderer.invoke('overlay:isVisible'),
+    setEditMode:     (e)       => ipcRenderer.invoke('overlay:setEditMode', e),
+    syncWidgets:     (l)       => ipcRenderer.invoke('overlay:syncWidgets', l),
+    setLevel:        (l)       => ipcRenderer.invoke('overlay:setLevel', l),
+    getLevel:        ()        => ipcRenderer.invoke('overlay:getLevel'),
+    notifyMoved:     (payload) => ipcRenderer.send('widget:moved', payload),
+    setClickThrough: (val)     => ipcRenderer.invoke('overlay:setClickThrough', val),
+    updateWidget:    (patch)   => ipcRenderer.invoke('overlay:updateWidget', patch),
+    removeWidget:    (id)      => ipcRenderer.invoke('overlay:removeWidget', id),
   },
 
   plugins: {
@@ -86,6 +115,17 @@ contextBridge.exposeInMainWorld('api', {
     load:       (id) => ipcRenderer.invoke('plugins:load', id),
     rescan:     ()   => ipcRenderer.invoke('plugins:rescan'),
     openFolder: ()   => ipcRenderer.invoke('plugins:openFolder'),
+  },
+
+  media: {
+    getInfo: ()  => ipcRenderer.invoke('media:getInfo'),
+    toggle:  ()  => ipcRenderer.invoke('media:toggle'),
+    next:    ()  => ipcRenderer.invoke('media:next'),
+    prev:    ()  => ipcRenderer.invoke('media:prev'),
+  },
+
+  desktopCapturer: {
+    getSources: () => ipcRenderer.invoke('desktopCapturer:getSources'),
   },
 
   app: {
@@ -100,7 +140,7 @@ contextBridge.exposeInMainWorld('api', {
       'plugin:loaded', 'plugin:error', 'widget:sync',
       'overlay:editMode', 'overlay:syncWidgets',
       'overlay:widgetMoved', 'overlay:levelChanged',
-      'widget:editMode',
+      'widget:editMode', 'widget:config',
       'widget:resized',
       'overlay:widgetResized',
     ]

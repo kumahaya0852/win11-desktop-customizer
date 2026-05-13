@@ -4,7 +4,11 @@ const path = require('path')
 const isDev = process.env.NODE_ENV === 'development'
 const isWin = process.platform === 'win32'
 
+// ウィジェット個別ウィンドウ管理（循環依存なし）
+const widgetWindows = require('./widgetWindows')
+
 let overlayWin   = null
+let editBarWin   = null   // 編集バー専用の小ウィンドウ（常時クリック可能）
 let editMode     = false
 let currentLevel = 'bottom'
 
@@ -84,6 +88,7 @@ function createOverlay() {
     }, 400)
   })
 
+  // 常にクリックスルー（編集バーは別ウィンドウで担当）
   overlayWin.setIgnoreMouseEvents(true, { forward: true })
 
   if (isDev) {
@@ -92,7 +97,6 @@ function createOverlay() {
     overlayWin.loadFile(path.join(__dirname, '../dist/overlay.html'))
   }
 
-  // ★ オーバーレイ用 DevTools（デバッグ用）
   if (isDev) {
     overlayWin.webContents.openDevTools({ mode: 'detach' })
   }
@@ -111,7 +115,66 @@ function createOverlay() {
   return overlayWin
 }
 
+// ── 編集バー専用ウィンドウ ─────────────────────────────────
+// 小さな専用ウィンドウで常時 setIgnoreMouseEvents(false) → 非同期トグル不要
+function createEditBarWindow() {
+  if (editBarWin && !editBarWin.isDestroyed()) return editBarWin
+
+  const { workAreaSize } = screen.getPrimaryDisplay()
+  const barW = 360, barH = 50
+
+  editBarWin = new BrowserWindow({
+    width:  barW,
+    height: barH,
+    x: Math.round((workAreaSize.width - barW) / 2),
+    y: 14,
+    transparent: true,
+    frame:       false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    resizable:   false,
+    movable:     false,
+    focusable:   true,
+    hasShadow:   false,
+    show:        false,   // ready-to-show 後に show() + setIgnoreMouseEvents を確実に適用
+    webPreferences: {
+      preload:          path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration:  false,
+      sandbox:          false,
+    },
+  })
+
+  // screen-saver レベルに昇格
+  editBarWin.setAlwaysOnTop(true, 'screen-saver')
+
+  // ウィンドウが完全に準備できてから setIgnoreMouseEvents(false) を適用する
+  // (transparent + WS_EX_LAYERED の状態で早期に呼ぶと Windows が無視することがある)
+  editBarWin.once('ready-to-show', () => {
+    if (!editBarWin || editBarWin.isDestroyed()) return
+    editBarWin.show()
+    editBarWin.setIgnoreMouseEvents(false)
+  })
+
+  // ?bar=1 パラメータで OverlayApp がバーモードで動作
+  if (isDev) {
+    editBarWin.loadURL('http://localhost:5173/overlay.html?bar=1')
+  } else {
+    editBarWin.loadFile(path.join(__dirname, '../dist/overlay.html'), { query: { bar: '1' } })
+  }
+
+  editBarWin.on('closed', () => { editBarWin = null })
+
+  return editBarWin
+}
+
+function destroyEditBar() {
+  if (editBarWin && !editBarWin.isDestroyed()) editBarWin.close()
+  editBarWin = null
+}
+
 function destroyOverlay() {
+  destroyEditBar()
   if (overlayWin && !overlayWin.isDestroyed()) overlayWin.close()
   overlayWin = null
   editMode   = false
@@ -123,28 +186,48 @@ function isOverlayVisible() {
 
 function setEditMode(enabled) {
   editMode = enabled
-  if (!overlayWin || overlayWin.isDestroyed()) return
+
+  // ── ウィジェット個別ウィンドウを先に更新 ──
+  widgetWindows.setEditMode(enabled)
+
   if (enabled) {
-    overlayWin.setAlwaysOnTop(false)
-    overlayWin.setIgnoreMouseEvents(false)
-    overlayWin.setFocusable(true)
-    overlayWin.focus()
+    // 編集バー専用ウィンドウを作成（常時クリック可能）
+    createEditBarWindow()
+    // メインオーバーレイは常にクリックスルー維持（ウィジェットドラッグを妨げない）
+    if (overlayWin && !overlayWin.isDestroyed()) {
+      overlayWin.setIgnoreMouseEvents(true, { forward: true })
+      overlayWin.setFocusable(false)
+    }
   } else {
-    overlayWin.setIgnoreMouseEvents(true, { forward: true })
-    overlayWin.setFocusable(false)
-    setTimeout(() => applyLevel(overlayWin, currentLevel), 150)
+    // 編集バーウィンドウを閉じる
+    destroyEditBar()
+    // メインオーバーレイを通常レベルに戻す
+    if (overlayWin && !overlayWin.isDestroyed()) {
+      overlayWin.setIgnoreMouseEvents(true, { forward: true })
+      overlayWin.setFocusable(false)
+      overlayWin.setAlwaysOnTop(false)
+      setTimeout(() => {
+        if (!overlayWin || overlayWin.isDestroyed() || editMode) return
+        overlayWin.setIgnoreMouseEvents(true, { forward: true })
+        applyLevel(overlayWin, currentLevel)
+      }, 200)
+    }
   }
-  overlayWin.webContents.send('overlay:editMode', enabled)
+
+  // Drawer など（ウィジェットウィンドウ以外）に通知
+  const widgetWinSet = new Set()
+  // widgetWindows モジュールが管理する window を除外するため getAllWindows から絞る
   BrowserWindow.getAllWindows().forEach(win => {
-    if (!win.isDestroyed() && win !== overlayWin) {
+    if (!win.isDestroyed() && win !== editBarWin) {
       win.webContents.send('overlay:editMode', enabled)
     }
   })
 }
 
 function syncWidgets(layout) {
-  if (!overlayWin || overlayWin.isDestroyed()) return
-  overlayWin.webContents.send('overlay:syncWidgets', layout, currentLevel)
+  BrowserWindow.getAllWindows().forEach(win => {
+    if (!win.isDestroyed()) win.webContents.send('overlay:syncWidgets', layout)
+  })
 }
 
 function syncTheme(theme) {
@@ -199,6 +282,13 @@ function register(ipcMain) {
   })
 
   ipcMain.handle('overlay:getLevel', () => currentLevel)
+
+  // overlay:setClickThrough は後方互換のため残す（現在は使用されない）
+  ipcMain.handle('overlay:setClickThrough', (_, enabled) => {
+    if (!overlayWin || overlayWin.isDestroyed()) return { ok: false }
+    overlayWin.setIgnoreMouseEvents(enabled, { forward: true })
+    return { ok: true }
+  })
 
   ipcMain.on('overlay:widgetMoved', (_, payload) => {
     BrowserWindow.getAllWindows().forEach(win => {

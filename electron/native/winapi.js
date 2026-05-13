@@ -13,11 +13,14 @@ function psEncode(script) {
   return Buffer.from(script, 'utf16le').toString('base64')
 }
 
+// PowerShell の進捗/エラーストリームをCLIXML形式で吐かせないための前置き
+const PS_PREAMBLE = "$ProgressPreference='SilentlyContinue';$ErrorActionPreference='SilentlyContinue';"
+
 function ps(script) {
   if (!isWin) return ''
   try {
     return execSync(
-      `powershell -NoProfile -NonInteractive -EncodedCommand ${psEncode(script)}`,
+      `powershell -NoProfile -NonInteractive -EncodedCommand ${psEncode(PS_PREAMBLE + script)}`,
       { windowsHide: true, encoding: 'utf8', timeout: 8000 }
     ).trim()
   } catch (e) {
@@ -29,7 +32,7 @@ function psAsync(script) {
   return new Promise((resolve, reject) => {
     if (!isWin) { resolve(''); return }
     exec(
-      `powershell -NoProfile -NonInteractive -EncodedCommand ${psEncode(script)}`,
+      `powershell -NoProfile -NonInteractive -EncodedCommand ${psEncode(PS_PREAMBLE + script)}`,
       { windowsHide: true, encoding: 'utf8', timeout: 10000 },
       (err, stdout, stderr) => {
         if (err) reject(new Error(stderr?.trim() || err.message))

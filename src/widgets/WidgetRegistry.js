@@ -54,3 +54,13 @@ register({
   minSize:     { w: 160, h: 120 },
   component:   () => import('./components/NoteWidget'),
 })
+
+register({
+  id:          'mediaplayer',
+  name:        'メディアプレイヤー',
+  icon:        '🎵',
+  defaultSize: { w: 280, h: 360 },
+  minSize:     { w: 200, h: 260 },
+  transparent: true,   // カード背景・ボーダーを非表示（透過ウィジェット）
+  component:   () => import('./components/MediaPlayerWidget'),
+})
